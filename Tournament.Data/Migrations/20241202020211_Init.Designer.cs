@@ -12,7 +12,7 @@ using TournamentProject.Data.Data;
 namespace TournamentProject.Data.Migrations
 {
     [DbContext(typeof(TournamentProjectApiContext))]
-    [Migration("20241201205420_Init")]
+    [Migration("20241202020211_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -45,6 +45,8 @@ namespace TournamentProject.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TournamentId");
+
                     b.ToTable("Game");
                 });
 
@@ -66,6 +68,17 @@ namespace TournamentProject.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tournament");
+                });
+
+            modelBuilder.Entity("TournamentProject.Core.Entities.Game", b =>
+                {
+                    b.HasOne("TournamentProject.Core.Entities.Tournament", "Tournament")
+                        .WithMany()
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tournament");
                 });
 #pragma warning restore 612, 618
         }
