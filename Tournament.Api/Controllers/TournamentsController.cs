@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ namespace TournamentProject.Api.Controllers
         public async Task<ActionResult<IEnumerable<TournamentDto>>> GetTournament()
         {
             //var t = await uow.TournamentRepository.GetAllAsync();
-            
+
             var tDto = _mapper.Map<IEnumerable<TournamentDto>>(await uow.TournamentRepository.GetAllAsync());
 
             if (tDto == null)
@@ -65,7 +66,9 @@ namespace TournamentProject.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTournament(int id, UpdateTournamentDto utDto)
         {
-            if (id != utDto.Id)
+            bool saveerror = false;
+
+            if (id != utDto.Id || utDto.Title.Length > 40)
             {
                 return BadRequest();
             }
@@ -80,36 +83,46 @@ namespace TournamentProject.Api.Controllers
                 //await _context.SaveChangesAsync();
                 await uow.CompleteAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch
             {
-                if (!TournamentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                saveerror = true;
             }
 
-            return NoContent();
+            if (saveerror) { return StatusCode(500); }
+            else { return Ok(); }
         }
 
         // POST: api/Tournaments
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<IActionResult>PostTournament(AddTournamentDto atDto)
+        public async Task<IActionResult> PostTournament(AddTournamentDto atDto)
         {
+            bool saveerror = false;
+
+            if (atDto.Title.Length > 40)
+            {
+                return BadRequest();
+            }
+
             //_context.Tournament.Add(tournament);
             //await _context.SaveChangesAsync();
 
             var tournament = _mapper.Map<Tournament>(atDto);
 
-
             uow.TournamentRepository.Add(tournament);
-            await uow.CompleteAsync();
 
-            return Created();
+            try
+            {
+                await uow.CompleteAsync();
+            }
+
+            catch
+            {
+                saveerror = true;
+            }
+
+            if (saveerror) { return StatusCode(500); }
+            else { return Ok(); }
             //return CreatedAtAction("GetTournament", new { id = tournament.Id }, tournament);
         }
 
@@ -117,6 +130,7 @@ namespace TournamentProject.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTournament(int id)
         {
+            bool saveerror = false;
             //var tournament = await _context.Tournament.FindAsync(id);
             var tournament = await uow.TournamentRepository.GetAsync(id);
 
@@ -129,15 +143,65 @@ namespace TournamentProject.Api.Controllers
             //await _context.SaveChangesAsync();
 
             uow.TournamentRepository.Remove(tournament);
-            await uow.CompleteAsync();
+
+            try
+            {
+                await uow.CompleteAsync();
+            }
+
+            catch
+            {
+                saveerror = true;
+            }
+
+            if (saveerror) { return StatusCode(500); }
+            else { return Ok(); }
+        }
+
+        /*private bool TournamentExists(int id)
+        {
+            //return _context.Tournament.Any(e => e.Id == id);
+            return uow.TournamentRepository.Any(id);
+        }*/
+
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult> PatchTournament(int id, JsonPatchDocument<UpdateTournamentDto> patchDocument)
+        {
+            if (patchDocument == null)
+            {
+                return BadRequest("No patch document");
+            }
+
+            var tournamentToPatch = await uow.TournamentRepository.GetAsync(id);
+
+            if (tournamentToPatch == null)
+            {
+                return NotFound("Tournament not found");
+            }
+
+            var utDto = _mapper.Map<UpdateTournamentDto>(tournamentToPatch);
+
+            patchDocument.ApplyTo(utDto, ModelState);
+            TryValidateModel(utDto);
+
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
+            }
+
+            //_mapper.Map(utDto, tournamentToPatch);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool TournamentExists(int id)
+
+
+        [HttpPatch("{tournamentId}")]
+        public async Task<ActionResult<TournamentDto>> PatchTournament(int TournamentId, JsonPatchDocument<TournamentDto> patchDocument)
         {
-            //return _context.Tournament.Any(e => e.Id == id);
-            return uow.TournamentRepository.Any(id);
+            return Ok();
         }
     }
 }

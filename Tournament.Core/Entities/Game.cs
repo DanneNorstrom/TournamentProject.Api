@@ -13,6 +13,9 @@ namespace TournamentProject.Core.Entities
         //[Key]
         //[DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Id { get; set; }
+
+        [Required]
+        [MaxLength(40)]
         public string Title { get; set; }
         public DateTime Time { get; set; }
         

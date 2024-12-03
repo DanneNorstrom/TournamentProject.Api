@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
@@ -70,7 +71,9 @@ namespace TournamentProject.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutGame(int id, UpdateGameDto ugDto)
         {
-            if (id != ugDto.Id)
+            bool saveerror = false;
+
+            if (id != ugDto.Id || ugDto.Title.Length > 40)
             {
                 return BadRequest();
             }
@@ -84,26 +87,21 @@ namespace TournamentProject.Api.Controllers
                 //await _context.SaveChangesAsync();
                 await uow.CompleteAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch
             {
-                if (!GameExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                saveerror = true;
             }
 
-            return NoContent();
+            if (saveerror) { return StatusCode(500); }
+            else { return Ok(); }
         }
 
         // POST: api/Games
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult>PostGame(AddGameDto agDto)
+        public async Task<ActionResult> PostGame(AddGameDto agDto)
         {
+            bool saveerror = false;
 
             //_context.Game.Add(game);
             //await _context.SaveChangesAsync();
@@ -111,10 +109,21 @@ namespace TournamentProject.Api.Controllers
             var game = _mapper.Map<Game>(agDto);
 
             uow.GameRepository.Add(game);
-            await uow.CompleteAsync();
 
-            return Created();
+            try
+            {
+                await uow.CompleteAsync();
+            }
 
+            catch
+            {
+                saveerror = true;
+            }
+
+            if (saveerror) { return StatusCode(500); }
+            else { return Ok(); }
+
+            //return Created();
             //return CreatedAtAction("GetGame", new { id = game.Id }, game);
         }
 
@@ -122,6 +131,8 @@ namespace TournamentProject.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGame(int id)
         {
+            bool saveerror = false;
+
             //var game = await _context.Game.FindAsync(id);
             var game = await uow.GameRepository.GetAsync(id);
 
@@ -134,15 +145,56 @@ namespace TournamentProject.Api.Controllers
             //await _context.SaveChangesAsync();
 
             uow.GameRepository.Remove(game);
-            await uow.CompleteAsync();
 
-            return NoContent();
+            try
+            {
+                await uow.CompleteAsync();
+            }
+
+            catch
+            {
+                saveerror = true;
+            }
+
+            if (saveerror) { return StatusCode(500); }
+            else { return Ok(); }
         }
 
-        private bool GameExists(int id)
+        /*private bool GameExists(int id)
         {
             //return _context.Game.Any(e => e.Id == id);
             return uow.GameRepository.Any(id);
+        }*/
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult>PatchGame(int id, JsonPatchDocument<UpdateGameDto> patchDocument)
+        {
+            if (patchDocument == null)
+            {
+                return BadRequest("No patch document");
+            }
+
+            var gameToPatch = await uow.GameRepository.GetAsync(id);
+
+            if (gameToPatch == null)
+            { 
+                return NotFound("Game not found");
+            }
+
+            var ugDto = _mapper.Map<UpdateGameDto> (gameToPatch);
+
+            patchDocument.ApplyTo(ugDto, ModelState);
+            TryValidateModel(ugDto);
+
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
+            }
+
+            //_mapper.Map(ugDto, gameToPatch);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
