@@ -26,6 +26,8 @@ namespace TournamentProject.Api
 
             builder.Services.AddScoped<IUoW,UoW>();
 
+            builder.Services.AddAutoMapper(typeof(TournamentMappings));
+
             var app = builder.Build();
 
             //await app.SeedDataAsync();

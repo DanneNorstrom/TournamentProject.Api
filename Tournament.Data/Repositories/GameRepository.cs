@@ -26,13 +26,13 @@ namespace TournamentProject.Data.Repositories
 
         public async Task<Game> GetAsync(int id)
         {
-            return await _context.Game.FirstOrDefaultAsync(t => t.Id == id);
+            return await _context.Game.FirstOrDefaultAsync(g => g.Id == id);
             //return await _context.Game.FindAsync(id);
         }
 
         public bool Any(int id)
         {
-            return _context.Game.Any(t => t.Id == id);
+            return _context.Game.Any(g => g.Id == id);
         }
 
         public void Add(Game game)

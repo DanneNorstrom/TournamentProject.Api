@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
+using TournamentProject.Core.Dto;
 using TournamentProject.Core.Entities;
 using TournamentProject.Core.Repositories;
 using TournamentProject.Data.Data;
@@ -19,66 +21,61 @@ namespace TournamentProject.Api.Controllers
     {
         private readonly TournamentProjectApiContext _context;
         private UoW uow;
+        private IMapper _mapper;
 
-        public GamesController(TournamentProjectApiContext context)
+        public GamesController(TournamentProjectApiContext context, IMapper mapper)
         {
             _context = context;
             uow = new UoW(_context);
+            _mapper = mapper;
         }
 
         // GET: api/Games
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Game>>> GetGame()
+        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame()
         {
-            var g = await uow.GameRepository.GetAllAsync();
+            //var g = await uow.GameRepository.GetAllAsync();
 
-            if (g == null)
+            var gDto = _mapper.Map<IEnumerable<GameDto>>(await uow.GameRepository.GetAllAsync());
+
+
+            if (gDto == null)
                 return NotFound();
 
             //return await _context.Game.ToListAsync();
 
-            return Ok(g);
+            return Ok(gDto);
         }
 
         // GET: api/Games/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Game>> GetGame(int id)
+        public async Task<ActionResult<GameDto>> GetGame(int id)
         {
-            var g = await uow.GameRepository.GetAsync(id);
+            var tDto = _mapper.Map<GameDto>(await uow.GameRepository.GetAsync(id));
+
+
+            //var g = await uow.GameRepository.GetAsync(id);
             //var game = await _context.Game.FindAsync(id);
 
-            if (g == null)
+            if (tDto == null)
             {
                 return NotFound();
             }
 
-            return Ok(g);
+            return Ok(tDto);
         }
-
-        /*[HttpGet]
-        public async Task<ActionResult<IEnumerable<Game>>> GetGames(int tournamentId)
-        {
-            var tournamentExist = await _context.Tournament.AnyAsync(t => t.Id == tournamentId);
-
-            if (!tournamentExist) return NotFound();
-
-            var games = await _context.Game.Where(g => g.TournamentId.Equals(tournamentId)).ToListAsync();
-            //var employeesDtos = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
-
-            //return Ok(employeesDtos);
-            return games;
-        }*/
 
         // PUT: api/Games/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutGame(int id, Game game)
+        public async Task<IActionResult> PutGame(int id, UpdateGameDto ugDto)
         {
-            if (id != game.Id)
+            if (id != ugDto.Id)
             {
                 return BadRequest();
             }
 
+            var game = _mapper.Map<Game>(ugDto);
             //_context.Entry(game).State = EntityState.Modified;
             uow.GameRepository.Update(game);
 
@@ -105,11 +102,13 @@ namespace TournamentProject.Api.Controllers
         // POST: api/Games
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Game>> PostGame(Game game)
+        public async Task<ActionResult>PostGame(AddGameDto agDto)
         {
 
             //_context.Game.Add(game);
             //await _context.SaveChangesAsync();
+
+            var game = _mapper.Map<Game>(agDto);
 
             uow.GameRepository.Add(game);
             await uow.CompleteAsync();

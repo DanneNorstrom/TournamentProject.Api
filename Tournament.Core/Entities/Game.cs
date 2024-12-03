@@ -15,8 +15,9 @@ namespace TournamentProject.Core.Entities
         public int Id { get; set; }
         public string Title { get; set; }
         public DateTime Time { get; set; }
+        
         public int TournamentId { get; set; }   //required foreign key property
-        public Tournament Tournament{ get; set; } //navigational property
+        //public Tournament Tournament{ get; set; } //navigational property
 
     }
 }
