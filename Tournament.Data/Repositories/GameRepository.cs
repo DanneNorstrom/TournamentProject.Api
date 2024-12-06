@@ -23,6 +23,12 @@ namespace TournamentProject.Data.Repositories
         {
             return await _context.Game.ToListAsync();
         }
+        public async Task<IEnumerable<Game>> GetAllAsync(string Title)
+        {
+            return await _context.Game.
+                Where(g => g.Title == Title).
+                ToListAsync();
+        }
 
         public async Task<Game> GetAsync(int id)
         {

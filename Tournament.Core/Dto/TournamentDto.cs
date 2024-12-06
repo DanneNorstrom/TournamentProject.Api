@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
+using TournamentProject.Core.Entities;
 
 namespace TournamentProject.Core.Dto
 {
@@ -26,5 +27,7 @@ namespace TournamentProject.Core.Dto
         {
             get { return enddate; }
         }
+
+        public ICollection<Game> Games { get; set; }
     }
 }

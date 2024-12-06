@@ -18,6 +18,6 @@ namespace TournamentProject.Core.Entities
         [MaxLength(40)]
         public string Title { get; set; }
         public DateTime StartDate { get; set; }
-        ICollection<Game> Games { get; set; }
+        public ICollection<Game> Games { get; set; }
     }
 }

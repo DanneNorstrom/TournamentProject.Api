@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TournamentProject.Core.Entities;
 using TournamentProject.Core.Repositories;
 using TournamentProject.Data.Data;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
 namespace TournamentProject.Data.Repositories
@@ -20,9 +21,25 @@ namespace TournamentProject.Data.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Tournament>> GetAllAsync()
+        /*public async Task<IEnumerable<Tournament>> GetAllAsync()
         { 
             return await _context.Tournament.ToListAsync();
+        }*/
+
+        public async Task<IEnumerable<Tournament>> GetAllAsync(bool includeGames)
+        {
+            if (includeGames)
+            {
+                return await _context.Tournament
+                .Include(t => t.Games)
+                .ToListAsync();
+            }
+
+            else
+            {
+                return await _context.Tournament
+               .ToListAsync();
+            }
         }
 
         public async Task<Tournament> GetAsync(int id)
@@ -30,6 +47,8 @@ namespace TournamentProject.Data.Repositories
             return await _context.Tournament.FirstOrDefaultAsync(t => t.Id == id);
             //return await _context.Tournament.FindAsync(id);
         }
+
+
 
         public bool Any(int id)
         {

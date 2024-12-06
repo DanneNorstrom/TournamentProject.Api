@@ -20,14 +20,12 @@ namespace TournamentProject.Api.Controllers
     [ApiController]
     public class GamesController : ControllerBase
     {
-        private readonly TournamentProjectApiContext _context;
-        private UoW uow;
-        private IMapper _mapper;
+        private readonly IUoW _uoW;
+        private readonly IMapper _mapper;
 
-        public GamesController(TournamentProjectApiContext context, IMapper mapper)
+        public GamesController(IUoW uoW, IMapper mapper)
         {
-            _context = context;
-            uow = new UoW(_context);
+            _uoW = uoW;
             _mapper = mapper;
         }
 
@@ -37,7 +35,7 @@ namespace TournamentProject.Api.Controllers
         {
             //var g = await uow.GameRepository.GetAllAsync();
 
-            var gDto = _mapper.Map<IEnumerable<GameDto>>(await uow.GameRepository.GetAllAsync());
+            var gDto = _mapper.Map<IEnumerable<GameDto>>(await _uoW.GameRepository.GetAllAsync());
 
 
             if (gDto == null)
@@ -52,19 +50,31 @@ namespace TournamentProject.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<GameDto>> GetGame(int id)
         {
-            var tDto = _mapper.Map<GameDto>(await uow.GameRepository.GetAsync(id));
+            var gDto = _mapper.Map<GameDto>(await _uoW.GameRepository.GetAsync(id));
 
 
             //var g = await uow.GameRepository.GetAsync(id);
             //var game = await _context.Game.FindAsync(id);
 
-            if (tDto == null)
+            if (gDto == null)
             {
                 return NotFound();
             }
 
-            return Ok(tDto);
+            return Ok(gDto);
         }
+
+        // GET: api/Games/Search?Title=Poker
+        [Route("Search")]
+        [HttpGet]
+
+        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame(string Title)
+        {
+            var gDto = _mapper.Map<IEnumerable<GameDto>>(await _uoW.GameRepository.GetAllAsync(Title));
+
+            return Ok(gDto);
+        }
+
 
         // PUT: api/Games/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -80,12 +90,12 @@ namespace TournamentProject.Api.Controllers
 
             var game = _mapper.Map<Game>(ugDto);
             //_context.Entry(game).State = EntityState.Modified;
-            uow.GameRepository.Update(game);
+            _uoW.GameRepository.Update(game);
 
             try
             {
                 //await _context.SaveChangesAsync();
-                await uow.CompleteAsync();
+                await _uoW.CompleteAsync();
             }
             catch
             {
@@ -108,11 +118,11 @@ namespace TournamentProject.Api.Controllers
 
             var game = _mapper.Map<Game>(agDto);
 
-            uow.GameRepository.Add(game);
+            _uoW.GameRepository.Add(game);
 
             try
             {
-                await uow.CompleteAsync();
+                await _uoW.CompleteAsync();
             }
 
             catch
@@ -134,7 +144,7 @@ namespace TournamentProject.Api.Controllers
             bool saveerror = false;
 
             //var game = await _context.Game.FindAsync(id);
-            var game = await uow.GameRepository.GetAsync(id);
+            var game = await _uoW.GameRepository.GetAsync(id);
 
             if (game == null)
             {
@@ -144,11 +154,11 @@ namespace TournamentProject.Api.Controllers
             //_context.Game.Remove(game);
             //await _context.SaveChangesAsync();
 
-            uow.GameRepository.Remove(game);
+            _uoW.GameRepository.Remove(game);
 
             try
             {
-                await uow.CompleteAsync();
+                await _uoW.CompleteAsync();
             }
 
             catch
@@ -174,14 +184,14 @@ namespace TournamentProject.Api.Controllers
                 return BadRequest("No patch document");
             }
 
-            var gameToPatch = await uow.GameRepository.GetAsync(id);
+            var gameToPatch = await _uoW.GameRepository.GetAsync(id);
 
             if (gameToPatch == null)
             { 
                 return NotFound("Game not found");
             }
 
-            var ugDto = _mapper.Map<UpdateGameDto> (gameToPatch);
+            var ugDto = _mapper.Map<UpdateGameDto>(gameToPatch);
 
             patchDocument.ApplyTo(ugDto, ModelState);
             TryValidateModel(ugDto);
@@ -192,7 +202,8 @@ namespace TournamentProject.Api.Controllers
             }
 
             //_mapper.Map(ugDto, gameToPatch);
-            await _context.SaveChangesAsync();
+            //await _context.SaveChangesAsync();
+            await _uoW.CompleteAsync();
 
             return NoContent();
         }

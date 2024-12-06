@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol;
 using System.Collections.Generic;
 using TournamentProject.Core.Dto;
 using TournamentProject.Core.Entities;
+using TournamentProject.Core.Repositories;
 using TournamentProject.Data.Data;
 using TournamentProject.Data.Repositories;
 
@@ -14,27 +16,23 @@ namespace TournamentProject.Api.Controllers
     [ApiController]
     public class TournamentsController : ControllerBase
     {
-        private readonly TournamentProjectApiContext _context;
-        private UoW uow;
-        private IMapper _mapper;
+        private readonly IUoW _uoW;
+        private readonly IMapper _mapper;
 
-
-        public TournamentsController(TournamentProjectApiContext context, IMapper mapper)
-        //public TournamentsController(IUoW uoW)
+        public TournamentsController(IUoW uoW, IMapper mapper)
 
         {
-            _context = context;
-            uow = new UoW(_context);
+            _uoW = uoW;
             _mapper = mapper;
         }
 
         // GET: api/Tournaments
-        [HttpGet]
+        /*[HttpGet]
         public async Task<ActionResult<IEnumerable<TournamentDto>>> GetTournament()
         {
             //var t = await uow.TournamentRepository.GetAllAsync();
 
-            var tDto = _mapper.Map<IEnumerable<TournamentDto>>(await uow.TournamentRepository.GetAllAsync());
+            var tDto = _mapper.Map<IEnumerable<TournamentDto>>(await _uoW.TournamentRepository.GetAllAsync());
 
             if (tDto == null)
                 return NotFound();
@@ -42,13 +40,14 @@ namespace TournamentProject.Api.Controllers
             //return await _context.Tournament.ToListAsync();
 
             return Ok(tDto);
-        }
+        }*/
+
 
         // GET: api/Tournaments/5
         [HttpGet("{id}")]
         public async Task<ActionResult<TournamentDto>> GetTournament(int id)
         {
-            var tDto = _mapper.Map<TournamentDto>(await uow.TournamentRepository.GetAsync(id));
+            var tDto = _mapper.Map<TournamentDto>(await _uoW.TournamentRepository.GetAsync(id));
 
             //var tournament = await uow.TournamentRepository.GetAsync(id);
             //var tournament = await _context.Tournament.FindAsync(id);
@@ -57,6 +56,20 @@ namespace TournamentProject.Api.Controllers
             {
                 return NotFound();
             }
+
+            return Ok(tDto);
+        }
+
+        // GET: api/Tournaments?includeGames=
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<TournamentDto>>> GetTournament(bool includeGames)
+        {
+            //var t = await _uoW.TournamentRepository.GetAllAsync(includeGames);
+
+            var tDto = _mapper.Map<IEnumerable<TournamentDto>>(await _uoW.TournamentRepository.GetAllAsync(includeGames));
+
+            if (tDto == null)
+                return NotFound();
 
             return Ok(tDto);
         }
@@ -75,13 +88,13 @@ namespace TournamentProject.Api.Controllers
 
             var tournament = _mapper.Map<Tournament>(utDto);
             //_context.Entry(tournament).State = EntityState.Modified;
-            uow.TournamentRepository.Update(tournament);
+            _uoW.TournamentRepository.Update(tournament);
 
 
             try
             {
                 //await _context.SaveChangesAsync();
-                await uow.CompleteAsync();
+                await _uoW.CompleteAsync();
             }
             catch
             {
@@ -109,11 +122,11 @@ namespace TournamentProject.Api.Controllers
 
             var tournament = _mapper.Map<Tournament>(atDto);
 
-            uow.TournamentRepository.Add(tournament);
+            _uoW.TournamentRepository.Add(tournament);
 
             try
             {
-                await uow.CompleteAsync();
+                await _uoW.CompleteAsync();
             }
 
             catch
@@ -132,7 +145,7 @@ namespace TournamentProject.Api.Controllers
         {
             bool saveerror = false;
             //var tournament = await _context.Tournament.FindAsync(id);
-            var tournament = await uow.TournamentRepository.GetAsync(id);
+            var tournament = await _uoW.TournamentRepository.GetAsync(id);
 
             if (tournament == null)
             {
@@ -142,11 +155,11 @@ namespace TournamentProject.Api.Controllers
             //_context.Tournament.Remove(tournament);
             //await _context.SaveChangesAsync();
 
-            uow.TournamentRepository.Remove(tournament);
+            _uoW.TournamentRepository.Remove(tournament);
 
             try
             {
-                await uow.CompleteAsync();
+                await _uoW.CompleteAsync();
             }
 
             catch
@@ -173,7 +186,7 @@ namespace TournamentProject.Api.Controllers
                 return BadRequest("No patch document");
             }
 
-            var tournamentToPatch = await uow.TournamentRepository.GetAsync(id);
+            var tournamentToPatch = await _uoW.TournamentRepository.GetAsync(id);
 
             if (tournamentToPatch == null)
             {
@@ -191,17 +204,10 @@ namespace TournamentProject.Api.Controllers
             }
 
             //_mapper.Map(utDto, tournamentToPatch);
-            await _context.SaveChangesAsync();
+            //await _context.SaveChangesAsync();
+            await _uoW.CompleteAsync();
 
             return NoContent();
-        }
-
-
-
-        [HttpPatch("{tournamentId}")]
-        public async Task<ActionResult<TournamentDto>> PatchTournament(int TournamentId, JsonPatchDocument<TournamentDto> patchDocument)
-        {
-            return Ok();
         }
     }
 }

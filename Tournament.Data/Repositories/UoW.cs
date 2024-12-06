@@ -12,11 +12,6 @@ namespace TournamentProject.Data.Repositories
     {
         private readonly TournamentProjectApiContext _context;
 
-        /*public UoW()
-        {
-            int a = 5;
-        }*/
-
         public UoW(TournamentProjectApiContext context)
         {
             _context = context;
