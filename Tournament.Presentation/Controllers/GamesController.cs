@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿
+
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.EntityFrameworkCore;
 using TournamentProject.Core.Dto;
 using TournamentProject.Core.Entities;
 using TournamentProject.Core.Repositories;
-using TournamentProject.Data.Data;
-using TournamentProject.Data.Repositories;
 
-namespace TournamentProject.Api.Controllers
+namespace TournamentProject.Presentation.Controllers
 {
     [Route("api/Games")]
     [ApiController]
@@ -22,11 +15,13 @@ namespace TournamentProject.Api.Controllers
     {
         private readonly IUoW _uoW;
         private readonly IMapper _mapper;
+        //private IServiceManager _sm;
 
         public GamesController(IUoW uoW, IMapper mapper)
         {
             _uoW = uoW;
             _mapper = mapper;
+            //_sm = sm;
         }
 
         // GET: api/Games
@@ -177,7 +172,7 @@ namespace TournamentProject.Api.Controllers
         }*/
 
         [HttpPatch("{id}")]
-        public async Task<ActionResult>PatchGame(int id, JsonPatchDocument<UpdateGameDto> patchDocument)
+        public async Task<ActionResult> PatchGame(int id, JsonPatchDocument<UpdateGameDto> patchDocument)
         {
             if (patchDocument == null)
             {
@@ -187,7 +182,7 @@ namespace TournamentProject.Api.Controllers
             var gameToPatch = await _uoW.GameRepository.GetAsync(id);
 
             if (gameToPatch == null)
-            { 
+            {
                 return NotFound("Game not found");
             }
 

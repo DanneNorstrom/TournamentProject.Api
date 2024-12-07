@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TournamentProject.Core.Entities;
 using TournamentProject.Core.Dto;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+//using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace TournamentProject.Data.Data
 {
@@ -14,7 +14,7 @@ namespace TournamentProject.Data.Data
     {
         public TournamentMappings()
         {
-            CreateMap<Tournament, TournamentDto>();
+            CreateMap<Core.Entities.Tournament, TournamentDto>();
             CreateMap<Game, GameDto>();
             CreateMap<AddTournamentDto, Tournament>();
             CreateMap<UpdateTournamentDto, Tournament>();

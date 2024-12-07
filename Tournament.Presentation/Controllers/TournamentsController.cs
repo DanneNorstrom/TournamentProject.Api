@@ -1,16 +1,14 @@
-﻿using AutoMapper;
+﻿
+
+using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NuGet.Protocol;
-using System.Collections.Generic;
+using Services.Contracts;
 using TournamentProject.Core.Dto;
 using TournamentProject.Core.Entities;
 using TournamentProject.Core.Repositories;
-using TournamentProject.Data.Data;
-using TournamentProject.Data.Repositories;
 
-namespace TournamentProject.Api.Controllers
+namespace TournamentProject.Presentation.Controllers
 {
     [Route("api/Tournaments")]
     [ApiController]
@@ -18,12 +16,14 @@ namespace TournamentProject.Api.Controllers
     {
         private readonly IUoW _uoW;
         private readonly IMapper _mapper;
+        private IServiceManager _sm;
 
-        public TournamentsController(IUoW uoW, IMapper mapper)
-
+        public TournamentsController(IUoW uoW, IMapper mapper, IServiceManager sm)
+        //public TournamentsController(IServiceManager sm)
         {
             _uoW = uoW;
             _mapper = mapper;
+            _sm = sm;
         }
 
         // GET: api/Tournaments
@@ -35,7 +35,7 @@ namespace TournamentProject.Api.Controllers
             var tDto = _mapper.Map<IEnumerable<TournamentDto>>(await _uoW.TournamentRepository.GetAllAsync());
 
             if (tDto == null)
-                return NotFound();
+            return NotFound();
 
             //return await _context.Tournament.ToListAsync();
 
@@ -66,7 +66,9 @@ namespace TournamentProject.Api.Controllers
         {
             //var t = await _uoW.TournamentRepository.GetAllAsync(includeGames);
 
-            var tDto = _mapper.Map<IEnumerable<TournamentDto>>(await _uoW.TournamentRepository.GetAllAsync(includeGames));
+            var tDto = await _sm.TournamentService.GetAllAsync(includeGames);
+
+            //var tDto = _mapper.Map<IEnumerable<TournamentDto>>(await _uoW.TournamentRepository.GetAllAsync(includeGames));
 
             if (tDto == null)
                 return NotFound();
