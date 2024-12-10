@@ -16,7 +16,6 @@ namespace TournamentProject.Services
         public ITournamentService TournamentService => tournamentService.Value;
         public IGameService GameService => gameService.Value;
 
-
         public ServiceManager(Lazy<ITournamentService> tournamentservice, Lazy<IGameService> gameservice)
         {
             tournamentService = tournamentservice;

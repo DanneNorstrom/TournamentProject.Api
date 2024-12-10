@@ -10,7 +10,7 @@ using TournamentProject.Data.Data;
 
 namespace TournamentProject.Data.Migrations
 {
-    [DbContext(typeof(TournamentProjectApiContext))]
+    [DbContext(typeof(TournamentProjectContext))]
     partial class TournamentProjectApiContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

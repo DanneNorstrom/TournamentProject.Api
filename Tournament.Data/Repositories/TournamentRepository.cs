@@ -14,9 +14,9 @@ namespace TournamentProject.Data.Repositories
 {
     public class TournamentRepository : ITournamentRepository
     {
-        private readonly TournamentProjectApiContext _context;
+        private readonly TournamentProjectContext _context;
 
-        public TournamentRepository(TournamentProjectApiContext context)
+        public TournamentRepository(TournamentProjectContext context)
         {
             _context = context;
         }
@@ -42,13 +42,17 @@ namespace TournamentProject.Data.Repositories
             }
         }
 
-        public async Task<Tournament> GetAsync(int id)
+        public async Task<Tournament> GetAsync(int id, bool includeGames = false)
         {
-            return await _context.Tournament.FirstOrDefaultAsync(t => t.Id == id);
-            //return await _context.Tournament.FindAsync(id);
+            if(includeGames)
+            {
+                return await _context.Tournament
+                .Include(t => t.Games).
+                FirstOrDefaultAsync(t => t.Id == id);
+            }
+
+            else return await _context.Tournament.FindAsync(id);
         }
-
-
 
         public bool Any(int id)
         {

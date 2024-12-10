@@ -3,10 +3,12 @@
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Services.Contracts;
 using TournamentProject.Core.Dto;
 using TournamentProject.Core.Entities;
 using TournamentProject.Core.Repositories;
+using TournamentProject.Data.Data;
 
 namespace TournamentProject.Presentation.Controllers
 {
@@ -14,13 +16,15 @@ namespace TournamentProject.Presentation.Controllers
     [ApiController]
     public class TournamentsController : ControllerBase
     {
+        private TournamentProjectContext _context;
         private readonly IUoW _uoW;
         private readonly IMapper _mapper;
         private IServiceManager _sm;
 
-        public TournamentsController(IUoW uoW, IMapper mapper, IServiceManager sm)
+        public TournamentsController(TournamentProjectContext context, IUoW uoW, IMapper mapper, IServiceManager sm)
         //public TournamentsController(IServiceManager sm)
         {
+            _context = context;
             _uoW = uoW;
             _mapper = mapper;
             _sm = sm;
@@ -43,11 +47,11 @@ namespace TournamentProject.Presentation.Controllers
         }*/
 
 
-        // GET: api/Tournaments/5
+        // GET: api/Tournaments/5?includeGames=true
         [HttpGet("{id}")]
-        public async Task<ActionResult<TournamentDto>> GetTournament(int id)
+        public async Task<ActionResult<TournamentDto>> GetTournament(int id, bool includeGames = false)
         {
-            var tDto = _mapper.Map<TournamentDto>(await _uoW.TournamentRepository.GetAsync(id));
+            var tDto = _mapper.Map<TournamentDto>(await _uoW.TournamentRepository.GetAsync(id, includeGames));
 
             //var tournament = await uow.TournamentRepository.GetAsync(id);
             //var tournament = await _context.Tournament.FindAsync(id);
@@ -62,7 +66,7 @@ namespace TournamentProject.Presentation.Controllers
 
         // GET: api/Tournaments?includeGames=
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TournamentDto>>> GetTournament(bool includeGames)
+        public async Task<ActionResult<IEnumerable<TournamentDto>>> GetTournaments(bool includeGames)
         {
             //var t = await _uoW.TournamentRepository.GetAllAsync(includeGames);
 
@@ -91,7 +95,6 @@ namespace TournamentProject.Presentation.Controllers
             var tournament = _mapper.Map<Tournament>(utDto);
             //_context.Entry(tournament).State = EntityState.Modified;
             _uoW.TournamentRepository.Update(tournament);
-
 
             try
             {

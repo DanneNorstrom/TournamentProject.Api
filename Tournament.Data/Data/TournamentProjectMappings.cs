@@ -10,14 +10,16 @@ using TournamentProject.Core.Dto;
 
 namespace TournamentProject.Data.Data
 {
-    public class TournamentMappings : Profile
+    public class TournamentProjectMappings : Profile
     {
-        public TournamentMappings()
+        public TournamentProjectMappings()
         {
-            CreateMap<Core.Entities.Tournament, TournamentDto>();
-            CreateMap<Game, GameDto>();
+            CreateMap<Tournament, TournamentDto>();
             CreateMap<AddTournamentDto, Tournament>();
             CreateMap<UpdateTournamentDto, Tournament>();
+
+            CreateMap<Game, GameDto>();
+            CreateMap<Game, PagingGameDto>();
             CreateMap<AddGameDto, Game>();
             CreateMap<UpdateGameDto, Game>();
         }

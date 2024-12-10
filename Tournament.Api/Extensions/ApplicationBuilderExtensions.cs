@@ -9,7 +9,7 @@ namespace TournamentProject.Api.Extensions
             using (var scope = app.ApplicationServices.CreateScope())
             {
                 var services = scope.ServiceProvider;
-                var context = services.GetRequiredService<TournamentProjectApiContext>();
+                var context = services.GetRequiredService<TournamentProjectContext>();
 
                 try
                 {

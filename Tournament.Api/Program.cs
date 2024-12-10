@@ -17,7 +17,7 @@ namespace TournamentProject.Api
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.AddDbContext<TournamentProjectApiContext>(options =>
+            builder.Services.AddDbContext<TournamentProjectContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("TournamentProjectApiContext") ?? throw new InvalidOperationException("Connection string 'TournamentProjectApiContext' not found.")));
 
             // Add services to the container.
@@ -31,7 +31,7 @@ namespace TournamentProject.Api
 
             builder.Services.AddScoped<IUoW, UoW>();
 
-            builder.Services.AddAutoMapper(typeof(TournamentMappings));
+            builder.Services.AddAutoMapper(typeof(TournamentProjectMappings));
 
             builder.Services.AddScoped<IServiceManager, ServiceManager>();
 

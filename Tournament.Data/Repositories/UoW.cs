@@ -10,9 +10,9 @@ namespace TournamentProject.Data.Repositories
 {
     public class UoW : IUoW
     {
-        private readonly TournamentProjectApiContext _context;
+        private readonly TournamentProjectContext _context;
 
-        public UoW(TournamentProjectApiContext context)
+        public UoW(TournamentProjectContext context)
         {
             _context = context;
             TournamentRepository = new TournamentRepository(_context);

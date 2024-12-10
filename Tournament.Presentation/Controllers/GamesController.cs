@@ -3,9 +3,12 @@
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Services.Contracts;
 using TournamentProject.Core.Dto;
 using TournamentProject.Core.Entities;
 using TournamentProject.Core.Repositories;
+using TournamentProject.Data.Data;
 
 namespace TournamentProject.Presentation.Controllers
 {
@@ -13,29 +16,81 @@ namespace TournamentProject.Presentation.Controllers
     [ApiController]
     public class GamesController : ControllerBase
     {
-        private readonly IUoW _uoW;
-        private readonly IMapper _mapper;
-        //private IServiceManager _sm;
+        //private readonly TournamentProjectContext _context;
+        //private readonly IUoW _uoW;
+        //private readonly IMapper _mapper;
+        private IServiceManager _sm;
 
-        public GamesController(IUoW uoW, IMapper mapper)
+        public GamesController(TournamentProjectContext context, IUoW uoW, IMapper mapper, IServiceManager sm)
         {
-            _uoW = uoW;
-            _mapper = mapper;
-            //_sm = sm;
+            //_context = context;
+            //_uoW = uoW;
+            //_mapper = mapper;
+            _sm = sm;
         }
 
-        // GET: api/Games
+        // GET: api/Games?page=2&pageSize=50
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame()
+        public async Task<ActionResult<IEnumerable<PagingGameDto>>> GetGames(int page, int pageSize)
         {
             //var g = await uow.GameRepository.GetAllAsync();
 
-            var gDto = _mapper.Map<IEnumerable<GameDto>>(await _uoW.GameRepository.GetAllAsync());
+            //tDto.totalItems = await _context.Game.CountAsync();
 
+            //var gDto = _mapper.Map<IEnumerable<GameDto>>(await _uoW.GameRepository.GetAllAsync());
+
+            if (pageSize == 0)
+            {
+                pageSize = 20;
+            }
+
+            else
+            {
+                if (pageSize > 100)
+                {
+                    pageSize = 100;
+                }
+            }
+
+            //var ti = await _context.Game.CountAsync();
+            var ti = await _sm.GameService.CountAsync();
+            var tisave = ti;
+            int tp = 0;
+
+            do
+            {
+                tp++;
+
+                if (ti - pageSize <= 0)
+                {
+                    break;
+                }
+                else
+                {
+                    ti -= pageSize;
+                }
+
+            } while (true);
+
+            var gDto = await _sm.GameService.PagingAsync(page, pageSize);
 
             if (gDto == null)
                 return NotFound();
 
+            /*var games = await _context.Game
+               .OrderBy(g => g.Id)
+               .Skip((page - 1) * pageSize)
+               .Take(pageSize)
+               .ToListAsync();*/
+
+            //var gDto = _mapper.Map<IEnumerable<GameDto>>(games);
+
+            gDto.ElementAt(0).currentPage = page;
+            gDto.ElementAt(0).pageSize = pageSize;
+            gDto.ElementAt(0).totalItems = tisave;
+            gDto.ElementAt(0).totalPages = tp;
+   
+           
             //return await _context.Game.ToListAsync();
 
             return Ok(gDto);
@@ -45,8 +100,9 @@ namespace TournamentProject.Presentation.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<GameDto>> GetGame(int id)
         {
-            var gDto = _mapper.Map<GameDto>(await _uoW.GameRepository.GetAsync(id));
+            //var gDto = _mapper.Map<GameDto>(await _uoW.GameRepository.GetAsync(id));
 
+            var gDto = await _sm.GameService.GetAsync(id);
 
             //var g = await uow.GameRepository.GetAsync(id);
             //var game = await _context.Game.FindAsync(id);
@@ -60,20 +116,20 @@ namespace TournamentProject.Presentation.Controllers
         }
 
         // GET: api/Games/Search?Title=Poker
-        [Route("Search")]
+        /*[Route("Search")]
         [HttpGet]
 
-        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame(string Title)
+        public async Task<ActionResult<IEnumerable<GameDto>>> GetGames(string title)
         {
-            var gDto = _mapper.Map<IEnumerable<GameDto>>(await _uoW.GameRepository.GetAllAsync(Title));
+            var gDto = _mapper.Map<IEnumerable<GameDto>>(await _uoW.GameRepository.GetAllAsync(title));
 
             return Ok(gDto);
-        }
+        }*/
 
 
         // PUT: api/Games/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        /*[HttpPut("{id}")]
         public async Task<IActionResult> PutGame(int id, UpdateGameDto ugDto)
         {
             bool saveerror = false;
@@ -99,19 +155,21 @@ namespace TournamentProject.Presentation.Controllers
 
             if (saveerror) { return StatusCode(500); }
             else { return Ok(); }
-        }
+        }*/
 
         // POST: api/Games
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult> PostGame(AddGameDto agDto)
         {
-            bool saveerror = false;
+            //bool saveerror = false;
 
             //_context.Game.Add(game);
             //await _context.SaveChangesAsync();
 
-            var game = _mapper.Map<Game>(agDto);
+            var status = await _sm.GameService.Add(agDto);
+
+            /*var game = _mapper.Map<Game>(agDto);
 
             _uoW.GameRepository.Add(game);
 
@@ -126,7 +184,12 @@ namespace TournamentProject.Presentation.Controllers
             }
 
             if (saveerror) { return StatusCode(500); }
-            else { return Ok(); }
+            else { return Ok(); }*/
+
+            if (status.Message == "saveerror") return StatusCode(500);
+            else if (status.Message == "notfound") return NotFound();
+            else if (status.Message == "tournamentfull") return StatusCode(406);
+            return Ok();
 
             //return Created();
             //return CreatedAtAction("GetGame", new { id = game.Id }, game);
@@ -136,22 +199,22 @@ namespace TournamentProject.Presentation.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGame(int id)
         {
-            bool saveerror = false;
+            //bool saveerror = false;
 
             //var game = await _context.Game.FindAsync(id);
-            var game = await _uoW.GameRepository.GetAsync(id);
+            //var game = await _uoW.GameRepository.GetAsync(id);
+            //var game = await _sm.GameService.GetAsync(id);
 
-            if (game == null)
-            {
-                return NotFound();
-            }
+            var status = await _sm.GameService.Remove(id);
 
             //_context.Game.Remove(game);
             //await _context.SaveChangesAsync();
 
-            _uoW.GameRepository.Remove(game);
+            //_uoW.GameRepository.Remove(game);
 
-            try
+            //_sm.GameService.Remove(game);
+
+            /*try
             {
                 await _uoW.CompleteAsync();
             }
@@ -159,10 +222,11 @@ namespace TournamentProject.Presentation.Controllers
             catch
             {
                 saveerror = true;
-            }
+            }*/
 
-            if (saveerror) { return StatusCode(500); }
-            else { return Ok(); }
+            if (status.Message == "saveerror") return StatusCode(500); 
+            else if (status.Message == "notfound") return NotFound();
+            return Ok(); 
         }
 
         /*private bool GameExists(int id)
@@ -171,7 +235,7 @@ namespace TournamentProject.Presentation.Controllers
             return uow.GameRepository.Any(id);
         }*/
 
-        [HttpPatch("{id}")]
+        /*[HttpPatch("{id}")]
         public async Task<ActionResult> PatchGame(int id, JsonPatchDocument<UpdateGameDto> patchDocument)
         {
             if (patchDocument == null)
@@ -201,6 +265,6 @@ namespace TournamentProject.Presentation.Controllers
             await _uoW.CompleteAsync();
 
             return NoContent();
-        }
+        }*/
     }
 }

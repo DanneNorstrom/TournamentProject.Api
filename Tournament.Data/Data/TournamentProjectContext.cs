@@ -3,9 +3,9 @@ using TournamentProject.Core.Entities;
 
 namespace TournamentProject.Data.Data
 {
-    public class TournamentProjectApiContext : DbContext
+    public class TournamentProjectContext : DbContext
     {
-        public TournamentProjectApiContext(DbContextOptions<TournamentProjectApiContext> options)
+        public TournamentProjectContext(DbContextOptions<TournamentProjectContext> options)
             : base(options)
         {
         }

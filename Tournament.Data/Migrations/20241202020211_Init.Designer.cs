@@ -11,7 +11,7 @@ using TournamentProject.Data.Data;
 
 namespace TournamentProject.Data.Migrations
 {
-    [DbContext(typeof(TournamentProjectApiContext))]
+    [DbContext(typeof(TournamentProjectContext))]
     [Migration("20241202020211_Init")]
     partial class Init
     {

@@ -12,8 +12,8 @@ namespace TournamentProject.Data.Data
 {
     public class SeedData
     {
-        private static TournamentProjectApiContext context = default!;
-        public static async Task Init(TournamentProjectApiContext _context)
+        private static TournamentProjectContext context = default!;
+        public static async Task Init(TournamentProjectContext _context)
         {
             context = _context;
 
