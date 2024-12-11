@@ -15,5 +15,7 @@ namespace TournamentProject.Core.Repositories
         public void Add(Tournament tournament);
         public void Update(Tournament tournament);
         public void Remove(Tournament tournament);
+        public Task<int> CountAsync();
+        public Task<IEnumerable<Tournament>> PagingAsync(int page, int pageSize, bool IncludeGames);
     }
 }

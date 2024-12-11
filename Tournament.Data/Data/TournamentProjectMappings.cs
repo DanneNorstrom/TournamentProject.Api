@@ -15,6 +15,7 @@ namespace TournamentProject.Data.Data
         public TournamentProjectMappings()
         {
             CreateMap<Tournament, TournamentDto>();
+            CreateMap<Tournament, PagingTournamentDto>();
             CreateMap<AddTournamentDto, Tournament>();
             CreateMap<UpdateTournamentDto, Tournament>();
 

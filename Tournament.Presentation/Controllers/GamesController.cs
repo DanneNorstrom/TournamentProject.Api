@@ -19,9 +19,11 @@ namespace TournamentProject.Presentation.Controllers
         //private readonly TournamentProjectContext _context;
         //private readonly IUoW _uoW;
         //private readonly IMapper _mapper;
-        private IServiceManager _sm;
+        private readonly IServiceManager _sm;
 
-        public GamesController(TournamentProjectContext context, IUoW uoW, IMapper mapper, IServiceManager sm)
+        //public GamesController(TournamentProjectContext context, IUoW uoW, IMapper mapper, IServiceManager sm)
+        public GamesController(IServiceManager sm)
+
         {
             //_context = context;
             //_uoW = uoW;
@@ -61,21 +63,15 @@ namespace TournamentProject.Presentation.Controllers
             {
                 tp++;
 
-                if (ti - pageSize <= 0)
-                {
-                    break;
-                }
-                else
-                {
-                    ti -= pageSize;
-                }
+                if (ti - pageSize <= 0) break;
+                else ti -= pageSize;
 
             } while (true);
 
             var gDto = await _sm.GameService.PagingAsync(page, pageSize);
 
             if (gDto == null)
-                return NotFound();
+                return Problem(statusCode: 404);
 
             /*var games = await _context.Game
                .OrderBy(g => g.Id)
@@ -109,7 +105,7 @@ namespace TournamentProject.Presentation.Controllers
 
             if (gDto == null)
             {
-                return NotFound();
+                return Problem(statusCode: 404);
             }
 
             return Ok(gDto);
@@ -186,9 +182,9 @@ namespace TournamentProject.Presentation.Controllers
             if (saveerror) { return StatusCode(500); }
             else { return Ok(); }*/
 
-            if (status.Message == "saveerror") return StatusCode(500);
-            else if (status.Message == "notfound") return NotFound();
-            else if (status.Message == "tournamentfull") return StatusCode(406);
+            if (status.Message == "saveerror") return Problem(statusCode: 500);
+            else if (status.Message == "notfound") return Problem(statusCode: 404);
+            else if (status.Message == "tournamentfull") return Problem(statusCode: 406);
             return Ok();
 
             //return Created();
@@ -224,8 +220,8 @@ namespace TournamentProject.Presentation.Controllers
                 saveerror = true;
             }*/
 
-            if (status.Message == "saveerror") return StatusCode(500); 
-            else if (status.Message == "notfound") return NotFound();
+            if (status.Message == "saveerror") return Problem(statusCode: 500); 
+            else if (status.Message == "notfound") return Problem(statusCode: 404);
             return Ok(); 
         }
 

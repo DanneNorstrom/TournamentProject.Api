@@ -77,5 +77,31 @@ namespace TournamentProject.Data.Repositories
             _context.Tournament.Remove(tournament);
             //_context.SaveChangesAsync();
         }
+
+        public async Task<int> CountAsync()
+        {
+            return await _context.Tournament.CountAsync();
+        }
+        public async Task<IEnumerable<Tournament>> PagingAsync(int page, int pageSize, bool includeGames)
+        {
+            if (includeGames)
+            {
+                return await _context.Tournament
+                   .Include(t => t.Games)
+                   .OrderBy(g => g.Id)
+                   .Skip((page - 1) * pageSize)
+                   .Take(pageSize)
+                   .ToListAsync();
+            }
+
+            else
+            {
+                return await _context.Tournament
+                  .OrderBy(g => g.Id)
+                  .Skip((page - 1) * pageSize)
+                  .Take(pageSize)
+                  .ToListAsync();
+            }
     }
+}
 }
